@@ -19,3 +19,14 @@ void CPU::tick() {
 uint8_t CPU::get_next_instruction() {
     return memory.read(pc++);
 }
+
+bool CPU::is_zero() const {
+    return flags & (1 << 1);
+}
+
+void CPU::set_zero(bool value) {
+    if (value)
+        flags |= (1 << 1);
+    else
+        flags &= ~(1 << 1);
+}

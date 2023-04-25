@@ -8,6 +8,15 @@ void nop_handler(CPU &cpu) {
     std::cout << "NOP\n";
 }
 
+void dcr_b_handler(CPU &cpu) {
+    cpu.b--;
+
+    cpu.set_zero(cpu.b == 0);
+    // TODO: Set rest of flags
+
+    std::cout << "DCR B\n";
+}
+
 void mvi_b_handler(CPU &cpu) {
     const auto val = cpu.memory.read(cpu.pc);
     cpu.b = val;
@@ -29,6 +38,15 @@ void ldax_d_handler(CPU &cpu) {
     std::cout << "LDAX D\n";
 }
 
+void inx_d_handler(CPU &cpu) {
+    cpu.e++;
+
+    if (cpu.e == 0)
+        cpu.d++;
+
+    std::cout << "INX D\n";
+}
+
 void lxi_h_handler(CPU &cpu) {
     const auto low = cpu.memory.read(cpu.pc);
     const auto high = cpu.memory.read(cpu.pc + 1);
@@ -43,7 +61,7 @@ void inx_h_handler(CPU &cpu) {
 
     if (cpu.l == 0)
         cpu.h++;
-    
+
     std::cout << "INX H\n";
 }
 
@@ -57,6 +75,15 @@ void mov_m_a_handler(CPU &cpu) {
     const auto addr = (cpu.h << 8) | cpu.l;
     cpu.memory.write(addr, cpu.a);
     std::cout << "MOV M, A\n";
+}
+
+void jnz_handler(CPU &cpu) {
+    const auto addr = cpu.memory.read_word(cpu.pc);
+
+    if (cpu.is_zero() == 0)
+        cpu.pc = addr;
+
+    std::cout << "JNZ " << std::hex << static_cast<int>(addr) << "\n";
 }
 
 void jmp_handler(CPU &cpu) {
@@ -76,14 +103,17 @@ void call_handler(CPU &cpu) {
 
 const std::unordered_map<uint8_t, Instruction> instructions = {
         {0x00, {nop_handler,     0}},
+        {0x05, {dcr_b_handler,   0}},
         {0x06, {mvi_b_handler,   1}},
         {0x11, {lxi_d_handler,   2}},
         {0x1a, {ldax_d_handler,  0}},
+        {0x13, {inx_d_handler,   0}},
         {0x21, {lxi_h_handler,   2}},
         {0x23, {inx_h_handler,   0}},
         {0x31, {lxi_sp_handler,  2}},
         {0x77, {mov_m_a_handler, 0}},
-        // Although JMP is a 3 byte instruction, we're going to be overwriting the PC
+        // Although JMP, CALL, etc. are 3 byte instruction, we're going to be overwriting the PC
+        {0xC2, {jnz_handler,     0}},
         {0xC3, {jmp_handler,     0}},
         {0xCD, {call_handler,    0}}
 };

@@ -11,6 +11,10 @@ public:
 
     uint8_t get_next_instruction();
 
+    [[nodiscard]] bool is_zero() const;
+
+    void set_zero(bool value);
+
     Memory memory;
 
     uint8_t a;
@@ -22,4 +26,6 @@ public:
 
     uint16_t sp;
     uint16_t pc;
+
+    uint8_t flags;
 };
