@@ -14,6 +14,30 @@ void mvi_b_handler(CPU &cpu) {
     std::cout << "MVI B, " << std::hex << static_cast<int>(val) << "\n";
 }
 
+void lxi_d_handler(CPU &cpu) {
+    const auto low = cpu.memory.read(cpu.pc);
+    const auto high = cpu.memory.read(cpu.pc + 1);
+    cpu.d = high;
+    cpu.e = low;
+    const auto val = (high << 8) | low;
+    std::cout << "LXI D, " << std::hex << static_cast<int>(val) << "\n";
+}
+
+void ldax_d_handler(CPU &cpu) {
+    const auto addr = (cpu.d << 8) | cpu.e;
+    cpu.a = cpu.memory.read(addr);
+    std::cout << "LDAX D\n";
+}
+
+void lxi_h_handler(CPU &cpu) {
+    const auto low = cpu.memory.read(cpu.pc);
+    const auto high = cpu.memory.read(cpu.pc + 1);
+    cpu.h = high;
+    cpu.l = low;
+    const auto val = (high << 8) | low;
+    std::cout << "LXI H, " << std::hex << static_cast<int>(val) << "\n";
+}
+
 void lxi_sp_handler(CPU &cpu) {
     const auto addr = cpu.memory.read_word(cpu.pc);
     cpu.sp = addr;
@@ -38,6 +62,9 @@ void call_handler(CPU &cpu) {
 const std::unordered_map<uint8_t, Instruction> instructions = {
         {0x00, {nop_handler,    0}},
         {0x06, {mvi_b_handler,  1}},
+        {0x11, {lxi_d_handler,  2}},
+        {0x1a, {ldax_d_handler, 0}},
+        {0x21, {lxi_h_handler,  2}},
         {0x31, {lxi_sp_handler, 2}},
         // Although JMP is a 3 byte instruction, we're going to be overwriting the PC
         {0xC3, {jmp_handler,    0}},
