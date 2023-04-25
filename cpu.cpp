@@ -1,5 +1,4 @@
 #include "cpu.h"
-#include <iostream>
 #include "decoder.h"
 
 void CPU::tick() {
