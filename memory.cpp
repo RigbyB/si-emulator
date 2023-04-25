@@ -1,5 +1,4 @@
 #include "memory.h"
-
 #include <fstream>
 
 void Memory::load_rom(const std::string &filename) {
@@ -17,11 +16,15 @@ void Memory::load_rom(const std::string &filename) {
 
     file.seekg(0, std::ios::beg);
 
-    file.read(reinterpret_cast<char *>(contents), size);
+    file.read(reinterpret_cast<char *>(contents.data()), size);
 
     // TODO: Make this region read-only
 }
 
 uint8_t Memory::read(const uint16_t address) {
     return contents[address];
+}
+
+uint16_t Memory::read_word(const uint16_t address) {
+    return (contents[address + 1] << 8) | contents[address];
 }

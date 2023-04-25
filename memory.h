@@ -11,6 +11,8 @@ public:
 
     uint8_t read(uint16_t address);
 
+    uint16_t read_word(uint16_t address);
+
 private:
-    uint8_t contents[MEMORY_SIZE];
+    std::array<uint8_t, MEMORY_SIZE> contents;
 };
