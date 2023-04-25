@@ -41,7 +41,7 @@ const std::unordered_map<uint8_t, Instruction> instructions = {
         {0x31, {lxi_sp_handler, 2}},
         // Although JMP is a 3 byte instruction, we're going to be overwriting the PC
         {0xC3, {jmp_handler,    0}},
-        {0xCD, {call_handler,   2}}
+        {0xCD, {call_handler,   0}}
 };
 
 std::optional<Instruction> decode_opcode(const uint8_t opcode) {
