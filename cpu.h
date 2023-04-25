@@ -13,5 +13,8 @@ public:
 
     Memory memory;
 
+    uint8_t b;
+
+    uint16_t sp;
     uint16_t pc;
 };
