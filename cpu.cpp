@@ -1,18 +1,31 @@
 #include "cpu.h"
 #include "decoder.h"
+#include <ncurses.h>
 
 void CPU::tick() {
     const auto opcode = get_next();
 
     const auto instruction = decode_opcode(opcode);
 
-    if (!instruction.has_value()) {
+    if (instruction.has_value()) {
+        const auto handler = instruction.value();
+        handler(*this);
+    } else {
         // TODO: Show as hex
-        throw std::runtime_error("Invalid opcode " + std::to_string(opcode));
+        printw("Invalid opcode %02X\n", opcode);
     }
 
-    const auto handler = instruction.value();
-    handler(*this);
+    printw("PC: %04X\n", pc);
+    printw("SP: %04X\n", sp);
+    printw("A: %02X\n", a);
+    printw("B: %02X\n", b);
+    printw("C: %02X\n", c);
+    printw("D: %02X\n", d);
+    printw("E: %02X\n", e);
+    printw("H: %02X\n", h);
+    printw("L: %02X\n", l);
+    printw("F: %02X\n", flags);
+    printw("Opcode: %02X\n", opcode);
 }
 
 uint8_t CPU::get_next() {
