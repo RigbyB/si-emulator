@@ -18,14 +18,14 @@ void dcr_b_handler(CPU &cpu) {
 }
 
 void mvi_b_handler(CPU &cpu) {
-    const auto val = cpu.memory.read(cpu.pc);
+    const auto val = cpu.get_next();
     cpu.b = val;
     std::cout << "MVI B, " << std::hex << static_cast<int>(val) << "\n";
 }
 
 void lxi_d_handler(CPU &cpu) {
-    const auto low = cpu.memory.read(cpu.pc);
-    const auto high = cpu.memory.read(cpu.pc + 1);
+    const auto low = cpu.get_next();
+    const auto high = cpu.get_next();
     cpu.d = high;
     cpu.e = low;
     const auto val = (high << 8) | low;
@@ -48,8 +48,8 @@ void inx_d_handler(CPU &cpu) {
 }
 
 void lxi_h_handler(CPU &cpu) {
-    const auto low = cpu.memory.read(cpu.pc);
-    const auto high = cpu.memory.read(cpu.pc + 1);
+    const auto low = cpu.get_next();
+    const auto high = cpu.get_next();
     cpu.h = high;
     cpu.l = low;
     const auto val = (high << 8) | low;
@@ -66,9 +66,15 @@ void inx_h_handler(CPU &cpu) {
 }
 
 void lxi_sp_handler(CPU &cpu) {
-    const auto addr = cpu.memory.read_word(cpu.pc);
+    const auto addr = cpu.get_next_word();
     cpu.sp = addr;
     std::cout << "LXI SP, " << std::hex << static_cast<int>(addr) << "\n";
+}
+
+void sta_handler(CPU &cpu) {
+    const auto addr = cpu.get_next_word();
+    cpu.memory.write(addr, cpu.a);
+    std::cout << "STA " << std::hex << static_cast<int>(addr) << "\n";
 }
 
 void mov_m_a_handler(CPU &cpu) {
@@ -78,7 +84,7 @@ void mov_m_a_handler(CPU &cpu) {
 }
 
 void jnz_handler(CPU &cpu) {
-    const auto addr = cpu.memory.read_word(cpu.pc);
+    const auto addr = cpu.get_next_word();
 
     if (cpu.is_zero() == 0)
         cpu.pc = addr;
@@ -87,13 +93,13 @@ void jnz_handler(CPU &cpu) {
 }
 
 void jmp_handler(CPU &cpu) {
-    const auto addr = cpu.memory.read_word(cpu.pc);
+    const auto addr = cpu.get_next_word();
     cpu.pc = addr;
     std::cout << "JMP " << std::hex << static_cast<int>(addr) << "\n";
 }
 
 void call_handler(CPU &cpu) {
-    const auto addr = cpu.memory.read_word(cpu.pc);
+    const auto addr = cpu.get_next_word();
     cpu.sp -= 2;
     // This is the location after the call instruction and arguments
     cpu.memory.write_word(cpu.sp, cpu.pc + 2);
@@ -101,24 +107,25 @@ void call_handler(CPU &cpu) {
     std::cout << "CALL " << std::hex << static_cast<int>(addr) << "\n";
 }
 
-const std::unordered_map<uint8_t, Instruction> instructions = {
-        {0x00, {nop_handler,     0}},
-        {0x05, {dcr_b_handler,   0}},
-        {0x06, {mvi_b_handler,   1}},
-        {0x11, {lxi_d_handler,   2}},
-        {0x1a, {ldax_d_handler,  0}},
-        {0x13, {inx_d_handler,   0}},
-        {0x21, {lxi_h_handler,   2}},
-        {0x23, {inx_h_handler,   0}},
-        {0x31, {lxi_sp_handler,  2}},
-        {0x77, {mov_m_a_handler, 0}},
+const std::unordered_map<uint8_t, InstructionHandler> instructions = {
+        {0x00, nop_handler},
+        {0x05, dcr_b_handler},
+        {0x06, mvi_b_handler},
+        {0x11, lxi_d_handler},
+        {0x1a, ldax_d_handler},
+        {0x13, inx_d_handler},
+        {0x21, lxi_h_handler},
+        {0x23, inx_h_handler},
+        {0x31, lxi_sp_handler},
+        {0x32, sta_handler},
+        {0x77, mov_m_a_handler},
         // Although JMP, CALL, etc. are 3 byte instruction, we're going to be overwriting the PC
-        {0xC2, {jnz_handler,     0}},
-        {0xC3, {jmp_handler,     0}},
-        {0xCD, {call_handler,    0}}
+        {0xC2, jnz_handler},
+        {0xC3, jmp_handler},
+        {0xCD, call_handler}
 };
 
-std::optional<Instruction> decode_opcode(const uint8_t opcode) {
+std::optional<InstructionHandler> decode_opcode(const uint8_t opcode) {
     const auto instr_iter = instructions.find(opcode);
 
     if (instr_iter == instructions.end())

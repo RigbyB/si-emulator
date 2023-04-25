@@ -2,7 +2,6 @@
 
 #include <string>
 
-// TODO: This is temporary
 #define MEMORY_SIZE 0x4000
 
 class Memory {

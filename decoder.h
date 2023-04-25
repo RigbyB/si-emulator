@@ -3,4 +3,4 @@
 #include <optional>
 #include "instruction.h"
 
-std::optional<Instruction> decode_opcode(uint8_t opcode);
+std::optional<InstructionHandler> decode_opcode(uint8_t opcode);

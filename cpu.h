@@ -9,7 +9,9 @@ class CPU {
 public:
     void tick();
 
-    uint8_t get_next_instruction();
+    uint8_t get_next();
+
+    uint16_t get_next_word();
 
     [[nodiscard]] bool is_zero() const;
 
