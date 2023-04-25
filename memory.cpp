@@ -21,7 +21,12 @@ void Memory::load_rom(const std::string &filename) {
     // TODO: Make this region read-only
 }
 
-uint8_t Memory::read(const uint16_t address) {
+uint8_t Memory::read(uint16_t address) {
+    // Mirrored memory
+    if (address >= 0x4000) {
+        address -= 0x4000;
+    }
+
     if (address < 0 || address >= MEMORY_SIZE) {
         // TODO: Show as hex
         throw std::runtime_error("Reading address out of bounds " + std::to_string(address));
@@ -34,7 +39,12 @@ uint16_t Memory::read_word(const uint16_t address) {
     return read(address) | (read(address + 1) << 8);
 }
 
-void Memory::write(const uint16_t address, const uint8_t value) {
+void Memory::write(uint16_t address, const uint8_t value) {
+    // Mirrored memory
+    if (address >= 0x4000) {
+        address -= 0x4000;
+    }
+
     // TODO: Show as hex
     if (address < 0 || address >= MEMORY_SIZE) {
         throw std::runtime_error("Writing address out of bounds " + std::to_string(address));
