@@ -23,6 +23,18 @@ void mvi_b_handler(CPU &cpu) {
     std::cout << "MVI B, " << std::hex << static_cast<int>(val) << "\n";
 }
 
+void ldax_b_handler(CPU &cpu) {
+    const auto addr = (cpu.b << 8) | cpu.c;
+    cpu.a = cpu.memory.read(addr);
+    std::cout << "LDAX B\n";
+}
+
+void mvi_c_handler(CPU &cpu) {
+    const auto val = cpu.get_next();
+    cpu.c = val;
+    std::cout << "MVI C, " << std::hex << static_cast<int>(val) << "\n";
+}
+
 void lxi_d_handler(CPU &cpu) {
     const auto low = cpu.get_next();
     const auto high = cpu.get_next();
@@ -30,12 +42,6 @@ void lxi_d_handler(CPU &cpu) {
     cpu.e = low;
     const auto val = (high << 8) | low;
     std::cout << "LXI D, " << std::hex << static_cast<int>(val) << "\n";
-}
-
-void ldax_d_handler(CPU &cpu) {
-    const auto addr = (cpu.d << 8) | cpu.e;
-    cpu.a = cpu.memory.read(addr);
-    std::cout << "LDAX D\n";
 }
 
 void inx_d_handler(CPU &cpu) {
@@ -46,6 +52,25 @@ void inx_d_handler(CPU &cpu) {
 
     std::cout << "INX D\n";
 }
+
+void dad_d_handler(CPU &cpu) {
+    const auto hl = (cpu.h << 8) | cpu.l;
+    const auto de = (cpu.d << 8) | cpu.e;
+    const auto result = hl + de;
+    cpu.h = (result >> 8) & 0xFF;
+    cpu.l = result & 0xFF;
+
+    // TODO: Set flags
+
+    std::cout << "DAD D\n";
+}
+
+void ldax_d_handler(CPU &cpu) {
+    const auto addr = (cpu.d << 8) | cpu.e;
+    cpu.a = cpu.memory.read(addr);
+    std::cout << "LDAX D\n";
+}
+
 
 void lxi_h_handler(CPU &cpu) {
     const auto low = cpu.get_next();
@@ -77,10 +102,46 @@ void sta_handler(CPU &cpu) {
     std::cout << "STA " << std::hex << static_cast<int>(addr) << "\n";
 }
 
+void lda_handler(CPU &cpu) {
+    const auto addr = cpu.get_next_word();
+    cpu.a = cpu.memory.read(addr);
+    std::cout << "LDA " << std::hex << static_cast<int>(addr) << "\n";
+}
+
+void mvi_a_handler(CPU &cpu) {
+    const auto val = cpu.get_next();
+    cpu.a = val;
+    std::cout << "MVI A, " << std::hex << static_cast<int>(val) << "\n";
+}
+
 void mov_m_a_handler(CPU &cpu) {
     const auto addr = (cpu.h << 8) | cpu.l;
     cpu.memory.write(addr, cpu.a);
     std::cout << "MOV M, A\n";
+}
+
+void ana_a_handler(CPU &cpu) {
+    cpu.a &= cpu.a;
+
+    // TOOD: Set flags
+
+    std::cout << "ANA A\n";
+}
+
+void xra_a_handler(CPU &cpu) {
+    cpu.a ^= cpu.a;
+
+    // TODO: Set flags
+
+    std::cout << "XRA A\n";
+}
+
+void ora_c_handler(CPU &cpu) {
+    cpu.a |= cpu.c;
+
+    // TODO: Set flags
+
+    std::cout << "ORA C\n";
 }
 
 void jnz_handler(CPU &cpu) {
@@ -98,6 +159,12 @@ void jmp_handler(CPU &cpu) {
     std::cout << "JMP " << std::hex << static_cast<int>(addr) << "\n";
 }
 
+void ret_handler(CPU &cpu) {
+    cpu.pc = cpu.memory.read_word(cpu.sp);
+    cpu.sp += 2;
+    std::cout << "RET\n";
+}
+
 void call_handler(CPU &cpu) {
     const auto addr = cpu.get_next_word();
     cpu.sp -= 2;
@@ -107,22 +174,47 @@ void call_handler(CPU &cpu) {
     std::cout << "CALL " << std::hex << static_cast<int>(addr) << "\n";
 }
 
+void out_handler(CPU &cpu) {
+    const auto port = cpu.get_next();
+
+    // TODO: Implement output
+
+    std::cout << "OUT " << std::hex << static_cast<int>(port) << "\n";
+}
+
+void push_d_handler(CPU &cpu) {
+    cpu.sp -= 2;
+    cpu.memory.write_word(cpu.sp, (cpu.d << 8) | cpu.e);
+    std::cout << "PUSH D\n";
+}
+
 const std::unordered_map<uint8_t, InstructionHandler> instructions = {
         {0x00, nop_handler},
         {0x05, dcr_b_handler},
         {0x06, mvi_b_handler},
+        {0x0A, ldax_b_handler},
+        {0x0E, mvi_c_handler},
         {0x11, lxi_d_handler},
-        {0x1a, ldax_d_handler},
         {0x13, inx_d_handler},
+        {0x19, dad_d_handler},
+        {0x1A, ldax_d_handler},
         {0x21, lxi_h_handler},
         {0x23, inx_h_handler},
         {0x31, lxi_sp_handler},
         {0x32, sta_handler},
+        {0x3A, lda_handler},
+        {0x3E, mvi_a_handler},
         {0x77, mov_m_a_handler},
+        {0xA7, ana_a_handler},
+        {0xAF, xra_a_handler},
+        {0xB1, ora_c_handler},
         // Although JMP, CALL, etc. are 3 byte instruction, we're going to be overwriting the PC
         {0xC2, jnz_handler},
         {0xC3, jmp_handler},
-        {0xCD, call_handler}
+        {0xC9, ret_handler},
+        {0xCD, call_handler},
+        {0xD3, out_handler},
+        {0xD5, push_d_handler},
 };
 
 std::optional<InstructionHandler> decode_opcode(const uint8_t opcode) {

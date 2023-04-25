@@ -6,9 +6,10 @@ void CPU::tick() {
     const auto opcode = get_next();
 
     const auto instruction = decode_opcode(opcode);
+
     if (!instruction.has_value()) {
-        std::cout << "Invalid opcode: " << std::hex << static_cast<int>(opcode) << "\n";
-        return;
+        // TODO: Show as hex
+        throw std::runtime_error("Invalid opcode " + std::to_string(opcode));
     }
 
     const auto handler = instruction.value();
